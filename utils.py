@@ -14,6 +14,7 @@ def read_files(file_paths: list, drop_columns: list, date_column: str, UTC=True)
     if UTC==True:
         df['Datetime'] = df['Datetime'].dt.tz_convert('Europe/Zurich')
     else:
-        df['Datetime'] = df['Datetime'].dt.tz_localize('Europe/Zurich', ambiguous='infer')
+        # keep clock time exactly as-is, just relabel as Europe/Zurich
+        df['Datetime'] = pd.to_datetime(df[date_column]).dt.tz_localize(None)
 
     return df
