@@ -14,12 +14,19 @@ def read_files(file_paths: list, drop_columns: list, date_column: str, UTC=True)
     # get correct data type for datetime column
     df['Datetime'] = pd.to_datetime(df[date_column])
 
-    # the datetime column in the pollutant file is in UTC
-    # in the others in CET/CEST
+    # in the air pollution data set the datetime column is in UTC+1 for the whole year
+    # to make things easier, we convert it to UTC
     if UTC==True:
-        df['Datetime'] = df['Datetime'].dt.tz_convert('Europe/Zurich')
+        df['Datetime'] = (df['Datetime']
+                          .dt.tz_localize("Etc/GMT-1")
+                          .dt.tz_convert("UTC"))
+
+    # the traffic data is in CET/CEST. therefore, we have to handle the missing and the duplicated hour at the end
+    # of march and october, respectively (daylight saving time). this is done be the parameters in nonexistent and ambiguous.
+    # to make things easier, we convert it to UTC as well.
     else:
-        # keep time column as it is, just relabel as Europe/Zurich
-        df['Datetime'] = pd.to_datetime(df[date_column]).dt.tz_localize(None)
+        df['Datetime'] = (df['Datetime']
+                          .dt.tz_localize("Europe/Zurich", nonexistent="shift_forward", ambiguous="infer")
+                          .dt.tz_convert("UTC"))
 
     return df
